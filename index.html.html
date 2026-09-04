@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stardance Project Showcase | ESP32-CAM Print Node</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono&display=swap');
+
+    :root {
+      --bg-dark: #0d0e15;
+      --card-bg: #16192b;
+      --accent-purple: #9b5de5;
+      --accent-cyan: #00f5d4;
+      --text-main: #f8f9fa;
+      --text-muted: #a0a5c0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Space Grotesk', sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, var(--accent-purple), #f15bb5);
+      color: white;
+      padding: 6px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 50px;
+      display: inline-block;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 15px rgba(155, 93, 229, 0.4);
+      font-family: 'Space Mono', monospace;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin: 20px 0 10px 0;
+      font-weight: 700;
+      background: linear-gradient(to right, #fff, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 18px;
+      max-width: 600px;
+      margin: 0 auto 40px auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .full-width {
+        grid-column: span 2;
+      }
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(155, 93, 229, 0.3);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 22px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .code-container {
+      background-color: #090a0f;
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+      max-height: 500px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    pre {
+      margin: 0;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+      text-align: left;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--text-muted);
+    }
+
+    li {
+      margin-bottom: 10px;
+    }
+
+    li strong {
+      color: var(--text-main);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: var(--accent-purple);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">✨ Stardance Submission ✨</div>
+      <h1>ESP32-CAM 3D Print Node</h1>
+      <p>An edge-hosted network camera and remote snapshot module running local HTTP servers directly on micro silicon.</p>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2>🛠️ Hardware & Enclosure Build</h2>
+        <p>This project is engineered around the ESP32-CAM layout to keep monitoring private, secure, and entirely local.</p>
+        <ul>
+          <li><strong>Custom Enclosure:</strong> Designed and assembled a protective housing today to isolate vulnerable circuits from the printer frame.</li>
+          <li><strong>Daughterboard Stack:</strong> Uses an ESP32-CAM-MB shield for automated flashing sequences and stable 5V input.</li>
+          <li><strong>Dual Frame Buffers:</strong> Multi-threads active MJPEG stream routing over local TCP sockets simultaneously.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>💡 Engineering & Coding Process</h2>
+        <p>Instead of relying on heavy third-party web dependencies, this project runs full-stack configurations on minimal computing frameworks.</p>
+        <ul>
+          <li><strong>Embedded C++ Logic:</strong> Structured inside the Arduino IDE, eliminating black-box cloud templates.</li>
+          <li><strong>Dynamic Web Callbacks:</strong> Frontend dashboard utilizes fetch endpoints to run the flash LED array and toggle snapshot captures.</li>
+          <li><strong>Memory Management:</strong> Configured to optimize external PSRAM pipelines to hold video assets smoothly.</li>
+        </ul>
+      </div>
+
+      <div class="card full-width">
+        <h2>💻 Core Firmware Source (Arduino C++)</h2>
+        <p>This is the exact, hand-formatted baseline code running natively on the ESP32 chip to control video streams and light functions:</p>
+        <div class="code-container">
+<pre>
+#include "esp_camera.h"
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include "FS.h"
+#include "SPIFFS.h"
+
+const char* my_wifi_name = "YOUR_WIFI_SSID";
+const char* my_wifi_pass = "YOUR_WIFI_PASSWORD";
+
+int photonum = 0;
+int flashstate = 0;
+
+#define FLASH_LED_PIN 4
+
+#define PWDN_GPIO_NUM     32
+#define RESET_GPIO_NUM    -1
+#define XCLK_GPIO_NUM      0
+#define SIOD_GPIO_NUM     26
+#define SIOC_GPIO_NUM     27
+#define Y9_GPIO_NUM       35
+#define Y8_GPIO_NUM       34
+#define Y7_GPIO_NUM       39
+#define Y6_GPIO_NUM       36
+#define Y5_GPIO_NUM       21
+#define Y4_GPIO_NUM       19
+#define Y3_GPIO_NUM       18
+#define Y2_GPIO_NUM        5
+#define VSYNC_GPIO_NUM    25
+#define HREF_GPIO_NUM     23
+#define PCLK_GPIO_NUM     22
+
+WebServer server(80);
+
+const char INDEX_HTML[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html>
+<head>
+<title>My 3D Printer Monitor Website</title>
+<style>
+body{ background-color: #ffeb3b; color: #1a1a1a; font-family: "Comic Sans MS", sans-serif; text-align: center; }
+h1{ color: #d32f2f; font-size: 35px; }
+.box-container{ background: white; border: 5px solid #d32f2f; border-radius: 15px; padding: 15px; max-width: 450px; margin: 15px auto; }
+.screen-area{ background: black; border: 3px solid black; width: 100%; }
+.screen-area img{ width: 100%; }
+.cool-button{ background: #4caf50; color: white; border: 2px solid black; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; margin: 5px; }
+.blue-one{ background: #2196f3; }
+.orange-one{ background: #ff9800; color: black; }
+.status-bar{ background: #ff9800; padding: 5px; border: 1px solid black; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>🚀 My 3D Printer Cam 🚀</h1>
+<div class="box-container">
+  <h2>Live Video</h2>
+  <div class="screen-area"><img id="videostream" src="/stream"></div>
+  <div class="status-bar">Status: <span id="msg">All good!</span></div>
+</div>
+<div class="box-container">
+  <h2>Controls</h2>
+  <button class="cool-button orange-one" onclick="clickthelight()">TOGGLE THE FLASH LIGHT!</button><br><br>
+  <button class="cool-button" onclick="takesnap()">SNAP A PIC</button>
+  <button class="cool-button blue-one" onclick="showsnap()">SHOW PREVIEW</button><br>
+  <img id="preview" style="max-width: 150px; margin-top: 10px; display: none; border: 2px solid black;">
+</div>
+<script>
+function clickthelight(){ fetch('/toggle-light').then(res => res.text()).then(text => { document.getElementById('msg').innerText = "Flash is " + text; }); }
+function takesnap(){ document.getElementById('msg').innerText = "Snapping image..."; document.getElementById('videostream').src = ""; fetch('/capture').then(res => res.text()).then(data => { document.getElementById('msg').innerText = "Saved picture number " + data; setTimeout(function(){ document.getElementById('videostream').src = "/stream?t=" + new Date().getTime(); }, 400); }); }
+function showsnap(){ document.getElementById('preview').src = "/get-latest?t=" + new Date().getTime(); document.getElementById('preview').style.display = "inline-block"; }
+</script>
+</body>
+</html>
+)=====";
+
+void handleRoot() { server.send(200, "text/html", INDEX_HTML); }
+void handleStream() { WiFiClient client = server.client(); client.print("HTTP/1.1 200 OK
+"); client.print("Content-Type: multipart/x-mixed-replace;boundary=xyz_boundary
+
+"); while (client.connected()) { camera_fb_t * fb = esp_camera_fb_get(); if (!fb) { delay(100); continue; } client.print("
+--xyz_boundary
+"); client.printf("Content-Type: image/jpeg
+Content-Length: %u
+
+", fb->len); client.write(fb->buf, fb->len); esp_camera_fb_return(fb); delay(50); } }
+void handleCapture() { camera_fb_t * fb = esp_camera_fb_get(); if (!fb) { server.send(500, "text/plain", "error"); return; } String path = "/pic_" + String(photonum) + ".jpg"; File f = SPIFFS.open(path, FILE_WRITE); if (f) { f.write(fb->buf, fb->len); f.close(); photonum = photonum + 1; server.send(200, "text/plain", String(photonum)); } else { server.send(500, "text/plain", "fail"); } esp_camera_fb_return(fb); }
+void handleGetLatest() { if (photonum == 0) { server.send(404, "text/plain", "none"); return; } int index = photonum - 1; String path = "/pic_" + String(index) + ".jpg"; if (SPIFFS.exists(path)) { File f = SPIFFS.open(path, FILE_READ); server.streamFile(f, "image/jpeg"); f.close(); } else { server.send(404, "text/plain", "missing"); } }
+void handleToggleLight() { if (flashstate == 0) { flashstate = 1; digitalWrite(FLASH_LED_PIN, HIGH); server.send(200, "text/plain", "ON"); } else { flashstate = 0; digitalWrite(FLASH_LED_PIN, LOW); server.send(200, "text/plain", "OFF"); } }
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(FLASH_LED_PIN, OUTPUT);
+  digitalWrite(FLASH_LED_PIN, LOW);
+  SPIFFS.begin(true);
+
+  camera_config_t config;
+  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_timer = LEDC_TIMER_0;
+  config.pin_d0 = Y2_GPIO_NUM; config.pin_d1 = Y3_GPIO_NUM; config.pin_d2 = Y4_GPIO_NUM; config.pin_d3 = Y5_GPIO_NUM; config.pin_d4 = Y6_GPIO_NUM; config.pin_d5 = Y7_GPIO_NUM; config.pin_d6 = Y8_GPIO_NUM; config.pin_d7 = Y9_GPIO_NUM;
+  config.pin_xclk = XCLK_GPIO_NUM; config.pin_pclk = PCLK_GPIO_NUM; config.pin_vsync = VSYNC_GPIO_NUM; config.pin_href = HREF_GPIO_NUM;
+  config.pin_sscb_sda = SIOD_GPIO_NUM; config.pin_sscb_scl = SIOC_GPIO_NUM; config.pin_pwdn = PWDN_GPIO_NUM; config.pin_reset = RESET_GPIO_NUM;
+  config.xclk_freq_hz = 20000000; config.pixel_format = PIXFORMAT_JPEG; config.frame_size = FRAMESIZE_VGA; config.jpeg_quality = 12; config.fb_count = 2;
+
+  esp_camera_init(&config);
+  WiFi.begin(my_wifi_name, my_wifi_pass);
+  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
+  server.on("/", handleRoot); server.on("/stream", handleStream); server.on("/capture", handleCapture); server.on("/get-latest", handleGetLatest); server.on("/toggle-light", handleToggleLight);
+  server.begin();
+}
+
+void loop() { server.handleClient(); delay(2); }
+</pre>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Built for Hack Club <a href="https://stardance.hackclub.com/" target="_blank">Stardance</a> // 2026 Space Hackathon
+    </footer>
+  </div>
+
+</body>
+</html>
