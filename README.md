@@ -1,39 +1,275 @@
-# 🚀 My 3D Printer Camera Monitor Node 🚀
+#include "esp_camera.h"
+#include <WiFi.h>
+#include <WebServer.h>
+#include "FS.h"
+#include "SPIFFS.h"
 
-Welcome to my project repo! I built this cool local hardware camera server because I wanted to check on my 3D printer directly from my phone or bed. This prevents long prints from failing into plastic "spaghetti code" or trapping heat in the printer enclosure!
+// put wifi stuff here
+const char* my_wifi_name = "";
+const char* my_wifi_pass = "";
 
-This project was built for **Hack Club Stardance**. It runs an embedded C++ server directly on the micro silicon chip without relying on any external cloud platforms or subscription fees.
+int photonum = 0;
+int flashstate = 0;
 
----
+#define FLASH_LED_PIN 4
 
-## 🛠️ The Hardware System Map
-*   **The Brain:** ESP32-S Dev Module (with 4MB of dual-channel external PSRAM to process video frames).
-*   **The Lens:** OV2640 2-Megapixel camera module attached via a golden flat ribbon connector.
-*   **The Base Shield:** ESP32-CAM-MB USB download daughterboard (handles auto-flashing and feeds stable 5V current so the chip doesn't brown out).
-*   **The Shell:** A custom physical protective case enclosure that I custom-assembled today to protect the components from short-circuiting on the printer frame!
+#define PWDN_GPIO_NUM     32
+#define RESET_GPIO_NUM    -1
+#define XCLK_GPIO_NUM      0
+#define SIOD_GPIO_NUM     26
+#define SIOC_GPIO_NUM     27
+#define Y9_GPIO_NUM       35
+#define Y8_GPIO_NUM       34
+#define Y7_GPIO_NUM       39
+#define Y6_GPIO_NUM       36
+#define Y5_GPIO_NUM       21
+#define Y4_GPIO_NUM       19
+#define Y3_GPIO_NUM       18
+#define Y2_GPIO_NUM        5
+#define VSYNC_GPIO_NUM    25
+#define HREF_GPIO_NUM     23
+#define PCLK_GPIO_NUM     22
 
----
+WebServer server(80);
 
-## 💻 Software & Logic Design (Arduino IDE)
-I wrote the firmware in embedded C++ inside the Arduino IDE. The code manages dual memory buffers to execute multiple actions over my local Wi-Fi router simultaneously:
-1.  **Live Optical Downlink (`/stream`):** Pushes continuous VGA video frames across the local network using a raw multipart boundary pipeline so it renders inside a standard web layout.
-2.  **Flash Toggle Utility (`/toggle-light`):** Commands physical GPIO pin 4 to trigger the bright white onboard flash LED to illuminate dark printing beds at night.
-3.  **Local Snapshot Matrix (`/capture` & `/get-latest`):** Freeze-frames images directly onto the internal `SPIFFS` flash file partition for instant gallery viewing.
+const char INDEX_HTML[] PROGMEM = R"=====(
+<!DOCTYPE html>
+<html>
+<head>
+<title>My 3D Printer Monitor Website</title>
+<style>
+body{
+  background-color: #ffeb3b;
+  color: #1a1a1a;
+  font-family: "Comic Sans MS", sans-serif;
+  text-align: center;
+}
+h1{
+  color: #d32f2f;
+  font-size: 35px;
+}
+.box-container{
+  background: white;
+  border: 5px solid #d32f2f;
+  border-radius: 15px;
+  padding: 15px;
+  max-width: 450px;
+  margin: 15px auto;
+}
+.screen-area{
+  background: black;
+  border: 3px solid black;
+  width: 100%;
+}
+.screen-area img{
+  width: 100%;
+}
+.cool-button{
+  background: #4caf50;
+  color: white;
+  border: 2px solid black;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 5px;
+}
+.blue-one{
+  background: #2196f3;
+}
+.orange-one{
+  background: #ff9800;
+  color: black;
+}
+.status-bar{
+  background: #ff9800;
+  padding: 5px;
+  border: 1px solid black;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
 
----
+<h1>🚀 My 3D Printer Cam 🚀</h1>
+<p>I made this website to check my printer so it doesnt make plastic spaghetti.</p>
 
-## 🎨 The Web Control Panel Layout
-The frontend interface is baked directly inside the C++ string memory. I designed it to be bright, retro, and easy to use. It features:
-*   A classic, bright yellow high-visibility layout using clean comic fonts.
-*   Chunky action buttons that change styles when clicked.
-*   An inline asynchronous JavaScript fetch script that pauses data pipelines to trigger snapshot memory updates without breaking network connectivity.
+<div class="box-container">
+  <h2>Live Video</h2>
+  <div class="screen-area">
+    <img id="videostream" src="/stream">
+  </div>
+  <div class="status-bar">Status: <span id="msg">All good!</span></div>
+</div>
 
----
+<div class="box-container">
+  <h2>Controls</h2>
+  <button class="cool-button orange-one" onclick="clickthelight()">TOGGLE THE FLASH LIGHT!</button>
+  <br><br>
+  <button class="cool-button" onclick="takesnap()">SNAP A PIC</button>
+  <button class="cool-button blue-one" onclick="showsnap()">SHOW PREVIEW</button>
+  <br>
+  <img id="preview" style="max-width: 150px; margin-top: 10px; display: none; border: 2px solid black;">
+</div>
 
-## 🏆 Learning Milestones I Mastered
-*   **Hardware Assembly:** Learning how to align and reverse thin golden ribbon connector contact rows so pins touch the board's metal teeth properly.
-*   **Memory Management:** Juggling high-speed video processing arrays inside small 4MB storage bounds without overloading the microchip core.
-*   **Full-Stack Programming:** Bridging low-level hardware registers (C++) with standard front-end design protocols (HTML/CSS/JS).
+<script>
+function clickthelight(){
+  fetch('/toggle-light').then(res => res.text()).then(text => {
+    document.getElementById('msg').innerText = "Flash is " + text;
+  });
+}
 
-***
-*Built for Hack Club Stardance
+function takesnap(){
+  document.getElementById('msg').innerText = "Snapping image...";
+  document.getElementById('videostream').src = "";
+  
+  fetch('/capture').then(res => res.text()).then(data => {
+    document.getElementById('msg').innerText = "Saved picture number " + data;
+    setTimeout(function(){ 
+      document.getElementById('videostream').src = "/stream?t=" + new Date().getTime(); 
+    }, 400);
+  });
+}
+
+function showsnap(){
+  document.getElementById('preview').src = "/get-latest?t=" + new Date().getTime();
+  document.getElementById('preview').style.display = "inline-block";
+}
+</script>
+
+</body>
+</html>
+)=====";
+
+void handleRoot() {
+  server.send(200, "text/html", INDEX_HTML);
+}
+
+void handleStream() {
+  WiFiClient client = server.client();
+  
+  client.print("HTTP/1.1 200 OK\r\n");
+  client.print("Content-Type: multipart/x-mixed-replace;boundary=xyz_boundary\r\n\r\n");
+
+  while (client.connected()) {
+    camera_fb_t * fb = esp_camera_fb_get();
+    if (!fb) {
+      delay(100);
+      continue;
+    }
+    client.print("\r\n--xyz_boundary\r\n");
+    client.printf("Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n", fb->len);
+    client.write(fb->buf, fb->len);
+    esp_camera_fb_return(fb);
+    delay(50);
+  }
+}
+
+void handleCapture() {
+  camera_fb_t * fb = esp_camera_fb_get();
+  if (!fb) {
+    server.send(500, "text/plain", "error");
+    return;
+  }
+
+  String path = "/pic_" + String(photonum) + ".jpg";
+  File f = SPIFFS.open(path, FILE_WRITE);
+  
+  if (f) {
+    f.write(fb->buf, fb->len);
+    f.close();
+    photonum = photonum + 1;
+    server.send(200, "text/plain", String(photonum));
+  } else {
+    server.send(500, "text/plain", "fail");
+  }
+  esp_camera_fb_return(fb);
+}
+
+void handleGetLatest() {
+  if (photonum == 0) {
+    server.send(404, "text/plain", "none");
+    return;
+  }
+  int index = photonum - 1;
+  String path = "/pic_" + String(index) + ".jpg";
+  if (SPIFFS.exists(path)) {
+    File f = SPIFFS.open(path, FILE_READ);
+    server.streamFile(f, "image/jpeg");
+    f.close();
+  } else {
+    server.send(404, "text/plain", "missing");
+  }
+}
+
+void handleToggleLight() {
+  if (flashstate == 0) {
+    flashstate = 1;
+    digitalWrite(FLASH_LED_PIN, HIGH);
+    server.send(200, "text/plain", "ON");
+  } else {
+    flashstate = 0;
+    digitalWrite(FLASH_LED_PIN, LOW);
+    server.send(200, "text/plain", "OFF");
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  
+  pinMode(FLASH_LED_PIN, OUTPUT);
+  digitalWrite(FLASH_LED_PIN, LOW);
+
+  SPIFFS.begin(true);
+
+  camera_config_t config;
+  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_timer = LEDC_TIMER_0;
+  config.pin_d0 = Y2_GPIO_NUM;
+  config.pin_d1 = Y3_GPIO_NUM;
+  config.pin_d2 = Y4_GPIO_NUM;
+  config.pin_d3 = Y5_GPIO_NUM;
+  config.pin_d4 = Y6_GPIO_NUM;
+  config.pin_d5 = Y7_GPIO_NUM;
+  config.pin_d6 = Y8_GPIO_NUM;
+  config.pin_d7 = Y9_GPIO_NUM;
+  config.pin_xclk = XCLK_GPIO_NUM;
+  config.pin_pclk = PCLK_GPIO_NUM;
+  config.pin_vsync = VSYNC_GPIO_NUM;
+  config.pin_href = HREF_GPIO_NUM;
+  config.pin_sscb_sda = SIOD_GPIO_NUM;
+  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_pwdn = PWDN_GPIO_NUM;
+  config.pin_reset = RESET_GPIO_NUM;
+  config.xclk_freq_hz = 20000000;
+  config.pixel_format = PIXFORMAT_JPEG;
+  config.frame_size = FRAMESIZE_VGA;
+  config.jpeg_quality = 12;
+  config.fb_count = 2;
+
+  esp_camera_init(&config);
+
+  WiFi.begin(my_wifi_name, my_wifi_pass);
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500); 
+    Serial.print(".");
+  }
+
+  Serial.println("\nconnected!");
+  Serial.print("http://");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", handleRoot);
+  server.on("/stream", handleStream);
+  server.on("/capture", handleCapture);
+  server.on("/get-latest", handleGetLatest);
+  server.on("/toggle-light", handleToggleLight);
+  
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  delay(2);
+}
