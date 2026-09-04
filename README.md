@@ -1,3 +1,4 @@
+<pre>
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <WebServer.h>
@@ -273,3 +274,4 @@ void loop() {
   server.handleClient();
   delay(2);
 }
+</pre>
