@@ -53,12 +53,7 @@ Follow these steps to prepare your environment and flash the board:
 6. Search for `esp32` and click **Install** on the package by **Espressif Systems**.
 
 ### Step 2: Configure the Project Code
-1. Open the built-in camera example by going to **File > Examples > ESP32 > Camera > CameraWebServer**.
-2. Find the camera model definitions near the top of the file. Uncomment your specific board and comment out the others. For the standard AI-Thinker module, it should look like this:
-   ```cpp
-   // Select camera model
-   #define CAMERA_MODEL_AI_THINKER // Has PSRAM
-   ```
+1.open the code in index.html.html and paste it in the arduino ide.
 3. Scroll down slightly to find the Wi-Fi credentials variables and fill in your network information:
    ```cpp
    const char* ssid = "YOUR_WIFI_NAME";
